@@ -1,2 +1,42 @@
 server:
   port: 8084
+# 放在根节点就好
+spring:
+  zipkin:
+    base-url: http://localhost:9411
+  sleuth:
+    sampler:
+      probability: 1 #采集比例,默认为10%,这里我们配置为1,就是全部请求都采集
+
+product-server: # 远程访问的服务器名称
+  ribbon:
+#    NFLoadBalancerRuleClassName: com.netflix.loadbalancer.RandomRule # 随机规则
+    MaxAutoRetries: 1 #默认配置为0,代表最大的尝试次数(本台服务器)
+    MaxAutoRetriesNextServer: 1 #默认配置为1,代表最大的尝试次数(下一台服务器)
+
+# 在使用Feign方式进行远程调用的时候,只能使用这种方式设置超时时间
+feign:
+  hystrix:
+    enabled: true
+  client:
+    config:
+      # 这里的product-server可以替换为default,含义和ribbon方式相同
+      product-server: # 如果为default，那么当前服务调用的所有远程连接都会应用下面的配置
+        connectTimeout: 1000 # 连接延时设置为3S
+        readTimeout: 1000 # 读取延时设置为3S
+
+# 配置熔断降级时间
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 5000
+
+# 放在配置文件根下即可
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*" # 代表开放所有地址
